@@ -17,6 +17,7 @@ class MoodEntryForm extends StatefulWidget {
 class _MoodEntryFormState extends State<MoodEntryForm> {
   int? _score;
   final _noteController = TextEditingController();
+  String? _errorMessage;
 
   @override
   void dispose() {
@@ -25,7 +26,19 @@ class _MoodEntryFormState extends State<MoodEntryForm> {
   }
 
   void _save() {
-    if (_score == null) return;
+    if (_score == null) {
+      setState(() {
+        _errorMessage = 'Choose a score from 1 to 10';
+      });
+      return;
+    }
+
+    if (_noteController.text.length > maxNoteLength) {
+      setState(() {
+        _errorMessage = 'Note is too long (maximum $maxNoteLength characters)';
+      });
+      return;
+    }
 
     final trimmedNote = _noteController.text.trim();
     final entry = MoodEntry(
@@ -38,6 +51,7 @@ class _MoodEntryFormState extends State<MoodEntryForm> {
 
     setState(() {
       _score = null;
+      _errorMessage = null;
     });
     _noteController.clear();
   }
@@ -66,15 +80,17 @@ class _MoodEntryFormState extends State<MoodEntryForm> {
             const SizedBox(height: 12),
             TextField(
               controller: _noteController,
-              decoration: const InputDecoration(
-                labelText: 'Note (optional)',
+              decoration: const InputDecoration(labelText: 'Note (optional)'),
+            ),
+            if (_errorMessage != null) ...[
+              const SizedBox(height: 8),
+              Text(
+                _errorMessage!,
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
               ),
-            ),
+            ],
             const SizedBox(height: 12),
-            FilledButton(
-              onPressed: _score == null ? null : _save,
-              child: const Text('Save entry'),
-            ),
+            FilledButton(onPressed: _save, child: const Text('Save entry')),
           ],
         ),
       ),
